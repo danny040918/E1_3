@@ -1,7 +1,7 @@
 import json
 import time
 
-# --- [도구 1: 시각화 - 대형 행렬 대응] ---
+# --- [도구 1: 시각화 - 뚫린 네모(□) 적용] ---
 def visualize_matrix(matrix, title="패턴 시각화"):
     size = len(matrix)
     print(f"\n{'='*30}")
@@ -9,9 +9,9 @@ def visualize_matrix(matrix, title="패턴 시각화"):
     print(f"{'='*30}")
     
     for row in matrix:
-        # 값이 0.5보다 크면 색칠된 칸(■), 작으면 빈 칸(  )으로 표시
-        # 대형 행렬에서 모양이 잘 보이도록 공백을 조절했습니다.
-        line = "".join(["■ " if val > 0.5 else "  " for val in row])
+        # 0.5보다 크면 ■ (색칠된 네모), 작으면 □ (뚫린 네모)
+        # 가독성을 위해 기호 뒤에 공백을 하나씩 추가했습니다.
+        line = "".join(["■ " if val > 0.5 else "□ " for val in row])
         print(line)
     print(f"{'='*30}\n")
 
@@ -19,7 +19,6 @@ def visualize_matrix(matrix, title="패턴 시각화"):
 def calculate_confidence(s_a, s_b):
     total = s_a + s_b
     if total == 0: return 0
-    # 두 점수의 차이가 클수록 신뢰도가 높음
     return (abs(s_a - s_b) / max(s_a, s_b)) * 100
 
 def normalize_label(label):
@@ -76,10 +75,11 @@ def run_manual_mode():
     print(f"▶ 최종 판정: {res}")
     print(f"▶ 판정 신뢰도: {conf:.1f}%")
 
-# --- [기능 2: JSON 모드 (대형 데이터 시각화 포함)] ---
+# --- [기능 2: JSON 모드 (대형 데이터 시각화)] ---
 def run_json_mode():
     print("\n[모드 2] JSON 데이터 일괄 분석")
     try:
+        # 한글 깨짐 방지를 위해 encoding='utf-8' 추가
         with open('data.json', 'r', encoding='utf-8') as f:
             data = json.load(f)
     except FileNotFoundError:
@@ -94,25 +94,23 @@ def run_json_mode():
     
     for p_id, p_info in patterns.items():
         try:
-            # ID에서 사이즈 추출 (예: test_13_1 -> 13)
             size = int(p_id.split('_')[1])
             f_key = f"size_{size}"
             p_mat = p_info['input']
             expected = normalize_label(p_info['expected'])
             
-            # MAC 연산 및 시간 측정
             start_time = time.perf_counter()
             s_cross = calculate_mac(filters[f_key]['cross'], p_mat)
             s_x = calculate_mac(filters[f_key]['x'], p_mat)
             end_time = time.perf_counter()
             
-            elapsed = (end_time - start_time) * 1000 # 밀리초(ms)
+            elapsed = (end_time - start_time) * 1000 
             
             final_res = judge(s_cross, s_x)
             conf = calculate_confidence(s_cross, s_x)
-            status = "✅ 일치(PASS)" if final_res == expected else "❌ 불일치(FAIL)"
+            status = "✅ 일치" if final_res == expected else "❌ 불일치"
             
-            # 시각화 출력
+            # 시각화 출력 (■와 □ 사용)
             visualize_matrix(p_mat, f"분석 패턴: {p_id}")
             
             print(f"▶ 분석 결과: {final_res} (정답: {expected}) -> {status}")
@@ -126,7 +124,7 @@ def run_json_mode():
 def main():
     while True:
         print("\n" + "="*45)
-        print("   MAC 패턴 인식 시스템 v2.0 (고도화 버전)")
+        print("   MAC 패턴 인식 시스템 v2.1 (시각화 개선)")
         print("="*45)
         print("1. 수동 입력 모드 (3x3 전용)")
         print("2. JSON 일괄 처리 모드 (대형 패턴 포함)")
